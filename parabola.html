@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulasi Gerak Parabola - Virtual Lab Fisika</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="header">
+        <div class="nav-container">
+            <div class="logo">Virtual Lab Fisika</div>
+            <nav class="nav-links">
+                <a href="index.html" class="nav-link">Beranda</a>
+                <a href="#parameters" class="nav-link">Parameter</a>
+            </nav>
+        </div>
+    </header>
+
+    <section class="hero-secondary">
+        <div class="hero-content">
+            <h1>Simulasi Gerak Parabola: Permainan Tenis</h1>
+            <p>Pelajari konsep gerak parabola melalui simulasi permainan tenis interaktif</p>
+        </div>
+    </section>
+
+    <main class="simulation-container">
+        <div class="simulation-layout">
+            <div class="simulation-main">
+                <div class="instruction-box">
+                    <h2>Petunjuk Penggunaan</h2>
+                    <ul>
+                        <li>Atur kecepatan awal dan sudut elevasi menggunakan slider</li>
+                        <li>Klik tombol "Lempar" untuk memulai simulasi</li>
+                        <li>Perhatikan lintasan bola dan parameter fisika yang terukur</li>
+                        <li>Klik "Ulangi" untuk mengatur ulang simulasi</li>
+                    </ul>
+                </div>
+
+                <canvas id="simulationCanvas"></canvas>
+            </div>
+
+            <div class="parameters-panel">
+                <h2>Parameter Simulasi</h2>
+                <div class="parameter-group">
+                    <label>Kecepatan Awal (m/s)</label>
+                    <input type="range" id="initialVelocity" class="parameter-slider" min="1" max="30" value="20">
+                    <div class="slider-labels">
+                        <span>1 m/s</span>
+                        <span id="velocityValue">20 m/s</span>
+                        <span>30 m/s</span>
+                    </div>
+                </div>
+
+                <div class="parameter-group">
+                    <label>Sudut Elevasi (°)</label>
+                    <input type="range" id="angle" class="parameter-slider" min="0" max="90" value="45">
+                    <div class="slider-labels">
+                        <span>0°</span>
+                        <span id="angleValue">45°</span>
+                        <span>90°</span>
+                    </div>
+                </div>
+
+                <div class="results-section">
+                    <h3>Hasil Perhitungan:</h3>
+                    <div class="results-grid">
+                        <div class="result-item">
+                            <span>Percepatan gravitasi:</span>
+                            <span>9.81 m/s²</span>
+                        </div>
+                        <div class="result-item">
+                            <span>Kecepatan sumbu X:</span>
+                            <span id="vx">0 m/s</span>
+                        </div>
+                        <div class="result-item">
+                            <span>Kecepatan sumbu Y:</span>
+                            <span id="vy">0 m/s</span>
+                        </div>
+                        <div class="result-item">
+                            <span>Waktu tempuh:</span>
+                            <span id="time">0 s</span>
+                        </div>
+                        <div class="result-item">
+                            <span>Jarak maksimum:</span>
+                            <span id="maxDistance">0 m</span>
+                        </div>
+                        <div class="result-item">
+                            <span>Tinggi maksimum:</span>
+                            <span id="maxHeight">0 m</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button id="throwButton" class="primary-button">Lempar</button>
+                    <button id="resetButton" class="primary-button">Ulangi</button>
+                </div>
+            </div>
+        </div>
+
+        <section class="concept-explanation">
+            <h2>Penjelasan Konsep</h2>
+            <p>Gerak parabola adalah gerak dua dimensi yang terjadi akibat perpaduan gerak lurus beraturan (GLB) pada sumbu X dan gerak lurus berubah beraturan (GLBB) pada sumbu Y akibat pengaruh gravitasi.</p>
+
+            <h3>Komponen Gerak:</h3>
+            <ul>
+                <li><strong>Sumbu X (horizontal):</strong> Kecepatan konstan, tidak dipengaruhi gravitasi<br>
+                    <em>x = v₀ cos(θ) × t</em></li>
+                <li><strong>Sumbu Y (vertikal):</strong> Dipengaruhi gravitasi, kecepatan berkurang hingga mencapai titik tertinggi<br>
+                    <em>y = v₀ sin(θ) × t - ½ gt²</em></li>
+            </ul>
+
+            <p class="note">Catatan: v₀ adalah kecepatan awal, θ adalah sudut elevasi, t adalah waktu, dan g adalah percepatan gravitasi (9.81 m/s²)</p>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>Virtual Lab Fisika © 2024</p>
+        <p>Dibuat oleh Muhammad Rafi Dhiyaulhaq - 18222069</p>
+    </footer>
+
+    <script src="parabola.js"></script>
+</body>
+</html>

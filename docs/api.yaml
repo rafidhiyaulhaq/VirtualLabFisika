@@ -1,0 +1,229 @@
+openapi: 3.0.0
+info:
+  title: Virtual Lab Fisika API
+  description: |
+    API dokumentasi untuk Virtual Lab Fisika - Simulasi Gerak Parabola.
+    
+    Fitur utama:
+    * Simulasi Gerak Parabola Interaktif
+    * Perhitungan Parameter Fisika
+    * Visualisasi Lintasan
+    * Penyimpanan Data Simulasi
+  version: 1.0.0
+  contact:
+    name: Muhammad Rafi Dhiyaulhaq
+    email: rafidhiyaulhaq@example.com
+
+servers:
+  - url: https://api.virtuallabfisika.com/v1
+    description: Production server
+  - url: http://localhost:8080/v1
+    description: Development server
+
+tags:
+  - name: simulasi
+    description: Endpoint untuk simulasi gerak parabola
+  - name: parameter
+    description: Endpoint untuk manajemen parameter simulasi
+  - name: hasil
+    description: Endpoint untuk hasil dan riwayat simulasi
+
+paths:
+  /simulasi/parabola:
+    post:
+      tags:
+        - simulasi
+      summary: Menjalankan simulasi gerak parabola
+      description: Menghitung dan mengembalikan hasil simulasi berdasarkan parameter yang diberikan
+      operationId: runSimulasi
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SimulasiInput'
+      responses:
+        '200':
+          description: Simulasi berhasil dijalankan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimulasiOutput'
+        '400':
+          description: Parameter tidak valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /simulasi/parameter:
+    get:
+      tags:
+        - parameter
+      summary: Mendapatkan rentang parameter yang valid
+      description: Mengembalikan batas minimum dan maksimum untuk setiap parameter simulasi
+      operationId: getParameterRanges
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParameterRanges'
+
+  /simulasi/hasil:
+    get:
+      tags:
+        - hasil
+      summary: Mendapatkan riwayat hasil simulasi
+      description: Mengembalikan daftar simulasi yang telah dilakukan
+      operationId: getSimulasiHistory
+      parameters:
+        - name: limit
+          in: query
+          description: Jumlah maksimum hasil yang dikembalikan
+          required: false
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SimulasiRecord'
+
+components:
+  schemas:
+    SimulasiInput:
+      type: object
+      required:
+        - kecepatanAwal
+        - sudutElevasi
+      properties:
+        kecepatanAwal:
+          type: number
+          format: float
+          minimum: 1
+          maximum: 30
+          example: 20
+          description: Kecepatan awal bola (m/s)
+        sudutElevasi:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 90
+          example: 45
+          description: Sudut elevasi lemparan (derajat)
+        percepatanGravitasi:
+          type: number
+          format: float
+          default: 9.81
+          description: Percepatan gravitasi (m/s²)
+
+    SimulasiOutput:
+      type: object
+      properties:
+        waktuTempuh:
+          type: number
+          format: float
+          example: 2.5
+          description: Waktu total perjalanan bola (s)
+        jarakMaksimum:
+          type: number
+          format: float
+          example: 40.8
+          description: Jarak horizontal maksimum (m)
+        tinggiMaksimum:
+          type: number
+          format: float
+          example: 20.4
+          description: Ketinggian maksimum yang dicapai (m)
+        kecepatanSumbuX:
+          type: number
+          format: float
+          example: 14.14
+          description: Komponen kecepatan pada sumbu X (m/s)
+        kecepatanSumbuY:
+          type: number
+          format: float
+          example: 14.14
+          description: Komponen kecepatan pada sumbu Y (m/s)
+        trajektori:
+          type: array
+          description: Array titik-titik lintasan bola
+          items:
+            $ref: '#/components/schemas/TitikLintasan'
+
+    TitikLintasan:
+      type: object
+      properties:
+        x:
+          type: number
+          format: float
+          description: Posisi horizontal (m)
+        y:
+          type: number
+          format: float
+          description: Posisi vertikal (m)
+        t:
+          type: number
+          format: float
+          description: Waktu sejak awal lemparan (s)
+
+    ParameterRanges:
+      type: object
+      properties:
+        kecepatanAwal:
+          type: object
+          properties:
+            min:
+              type: number
+              example: 1
+            max:
+              type: number
+              example: 30
+        sudutElevasi:
+          type: object
+          properties:
+            min:
+              type: number
+              example: 0
+            max:
+              type: number
+              example: 90
+
+    SimulasiRecord:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        timestamp:
+          type: string
+          format: date-time
+        input:
+          $ref: '#/components/schemas/SimulasiInput'
+        output:
+          $ref: '#/components/schemas/SimulasiOutput'
+        status:
+          type: string
+          enum: [SUCCESS, FAILED]
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+          example: "INVALID_PARAMETER"
+        message:
+          type: string
+          example: "Nilai parameter tidak valid"
+        details:
+          type: object
+          additionalProperties: true

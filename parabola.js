@@ -4,10 +4,20 @@ import { getAuth } from 'firebase/auth';
 const canvas = document.getElementById('simulationCanvas');
 const ctx = canvas.getContext('2d');
 
-canvas.style.width = '100%';
-canvas.style.height = '400px';
-canvas.width = canvas.offsetWidth;
-canvas.height = canvas.offsetHeight;
+// Set canvas size based on display size
+function resizeCanvas() {
+    const container = canvas.parentElement;
+    canvas.style.width = '100%';
+    canvas.style.height = '400px';
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+}
+
+// Call resize on load
+resizeCanvas();
+
+// Resize canvas when window size changes
+window.addEventListener('resize', resizeCanvas);
 
 const GRAVITY = 9.81;
 const SCALE = 20;
@@ -331,6 +341,12 @@ function drawPointText() {
     ctx.restore();
 }
 
+function initSimulation() {
+    resizeCanvas();
+    drawScene();
+    updateDisplays();
+}
+
 // Event listeners
 document.getElementById('initialVelocity').addEventListener('input', (e) => {
     initialVelocity = parseFloat(e.target.value);
@@ -345,6 +361,5 @@ document.getElementById('angle').addEventListener('input', (e) => {
 document.getElementById('throwButton').addEventListener('click', startSimulation);
 document.getElementById('resetButton').addEventListener('click', resetSimulation);
 
-// Initialize the simulation
-updateDisplays();
-drawScene();
+// Initialize when document loads
+document.addEventListener('DOMContentLoaded', initSimulation);

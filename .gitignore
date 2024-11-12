@@ -6,9 +6,9 @@ node_modules/
 .env
 **/.env
 
-# Firebase
-**/serviceAccountKey.json
+# Firebase credentials
 serviceAccountKey.json
+**/serviceAccountKey.json
 
 # IDE files
 .vscode/

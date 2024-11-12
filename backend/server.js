@@ -1,6 +1,5 @@
 // server.js
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
 const admin = require('firebase-admin');
 const jwt = require('jsonwebtoken');
@@ -13,48 +12,14 @@ app.use(cors());
 app.use(express.json());
 
 // Firebase Admin initialization
+const serviceAccount = require('./serviceAccountKey.json');
 admin.initializeApp({
-  credential: admin.credential.applicationDefault(),
-  projectId: process.env.FIREBASE_PROJECT_ID
+  credential: admin.credential.cert(serviceAccount),
+  projectId: 'virtual-physics-lab'
 });
 
-// MongoDB connection
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-});
-
-// User Schema
-const userSchema = new mongoose.Schema({
-  uid: { type: String, required: true, unique: true },
-  email: { type: String, required: true },
-  displayName: String,
-  progress: {
-    completedSimulations: { type: Number, default: 0 },
-    lastAccessed: Date
-  }
-});
-
-// Simulation Result Schema
-const simulationResultSchema = new mongoose.Schema({
-  userId: { type: String, required: true },
-  type: { type: String, required: true, default: 'parabola' },
-  parameters: {
-    initialVelocity: Number,
-    angle: Number,
-    gravity: Number
-  },
-  results: {
-    maxHeight: Number,
-    maxDistance: Number,
-    timeOfFlight: Number
-  },
-  score: Number,
-  createdAt: { type: Date, default: Date.now }
-});
-
-const User = mongoose.model('User', userSchema);
-const SimulationResult = mongoose.model('SimulationResult', simulationResultSchema);
+// Firestore reference
+const db = admin.firestore();
 
 // Middleware to verify Firebase token
 const verifyToken = async (req, res, next) => {
@@ -81,22 +46,26 @@ app.post('/api/auth', async (req, res) => {
     const { token } = req.body;
     const decodedToken = await admin.auth().verifyIdToken(token);
     
-    let user = await User.findOne({ uid: decodedToken.uid });
+    // Check if user exists in Firestore
+    const userRef = db.collection('users').doc(decodedToken.uid);
+    const userDoc = await userRef.get();
     
-    if (!user) {
-      user = await User.create({
-        uid: decodedToken.uid,
+    if (!userDoc.exists) {
+      // Create new user document
+      await userRef.set({
         email: decodedToken.email,
         displayName: decodedToken.name || '',
         progress: {
           completedSimulations: 0,
-          lastAccessed: new Date()
-        }
+          lastAccessed: admin.firestore.FieldValue.serverTimestamp()
+        },
+        createdAt: admin.firestore.FieldValue.serverTimestamp()
       });
     }
 
+    // Generate JWT token
     const jwtToken = jwt.sign(
-      { uid: user.uid },
+      { uid: decodedToken.uid },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
@@ -104,10 +73,9 @@ app.post('/api/auth', async (req, res) => {
     res.json({
       token: jwtToken,
       user: {
-        uid: user.uid,
-        email: user.email,
-        displayName: user.displayName,
-        progress: user.progress
+        uid: decodedToken.uid,
+        email: decodedToken.email,
+        displayName: decodedToken.name
       }
     });
   } catch (error) {
@@ -120,23 +88,26 @@ app.post('/api/simulation/result', verifyToken, async (req, res) => {
   try {
     const { parameters, results, score } = req.body;
     
-    const simulationResult = await SimulationResult.create({
+    // Add simulation result to Firestore
+    const simulationRef = await db.collection('simulation_results').add({
       userId: req.user.uid,
+      type: 'parabola',
       parameters,
       results,
-      score
+      score,
+      createdAt: admin.firestore.FieldValue.serverTimestamp()
     });
 
     // Update user progress
-    await User.findOneAndUpdate(
-      { uid: req.user.uid },
-      { 
-        $inc: { 'progress.completedSimulations': 1 },
-        $set: { 'progress.lastAccessed': new Date() }
-      }
-    );
+    const userRef = db.collection('users').doc(req.user.uid);
+    await userRef.update({
+      'progress.completedSimulations': admin.firestore.FieldValue.increment(1),
+      'progress.lastAccessed': admin.firestore.FieldValue.serverTimestamp()
+    });
 
-    res.json(simulationResult);
+    // Get the created simulation document
+    const simulationDoc = await simulationRef.get();
+    res.json({ id: simulationRef.id, ...simulationDoc.data() });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -145,9 +116,17 @@ app.post('/api/simulation/result', verifyToken, async (req, res) => {
 // Get user's simulation history
 app.get('/api/simulation/history', verifyToken, async (req, res) => {
   try {
-    const simulations = await SimulationResult.find({ userId: req.user.uid })
-      .sort({ createdAt: -1 })
+    const simulationsRef = db.collection('simulation_results')
+      .where('userId', '==', req.user.uid)
+      .orderBy('createdAt', 'desc')
       .limit(10);
+    
+    const snapshot = await simulationsRef.get();
+    const simulations = [];
+    
+    snapshot.forEach(doc => {
+      simulations.push({ id: doc.id, ...doc.data() });
+    });
     
     res.json(simulations);
   } catch (error) {
@@ -158,8 +137,14 @@ app.get('/api/simulation/history', verifyToken, async (req, res) => {
 // Get user progress
 app.get('/api/user/progress', verifyToken, async (req, res) => {
   try {
-    const user = await User.findOne({ uid: req.user.uid });
-    res.json(user.progress);
+    const userRef = db.collection('users').doc(req.user.uid);
+    const userDoc = await userRef.get();
+    
+    if (!userDoc.exists) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    res.json(userDoc.data().progress);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

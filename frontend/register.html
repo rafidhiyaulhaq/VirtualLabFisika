@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftar - Virtual Lab Fisika</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-box">
+            <h2>Daftar Akun Baru</h2>
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="displayName">Nama Lengkap</label>
+                    <input type="text" id="displayName" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required>
+                </div>
+                <button type="submit" class="primary-button">Daftar</button>
+                <div id="errorMessage" class="error-message"></div>
+            </form>
+            
+            <div class="divider">atau</div>
+            
+            <button id="googleRegister" class="google-button">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" height="18" alt="Google logo">
+                Daftar dengan Google
+            </button>
+            
+            <p class="auth-footer">
+                Sudah punya akun? <a href="login.html">Login</a>
+            </p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { registerWithEmail, loginWithGoogle } from './js/auth.js';
+
+        const errorMessage = document.getElementById('errorMessage');
+        
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const displayName = document.getElementById('displayName').value;
+            
+            try {
+                await registerWithEmail(email, password, displayName);
+                window.location.href = 'index.html';
+            } catch (error) {
+                errorMessage.style.display = 'block';
+                errorMessage.textContent = 'Registrasi gagal: ' + error.message;
+            }
+        });
+
+        document.getElementById('googleRegister').addEventListener('click', async () => {
+            try {
+                await loginWithGoogle();
+                window.location.href = 'index.html';
+            } catch (error) {
+                errorMessage.style.display = 'block';
+                errorMessage.textContent = 'Registrasi dengan Google gagal: ' + error.message;
+            }
+        });
+    </script>
+</body>
+</html>

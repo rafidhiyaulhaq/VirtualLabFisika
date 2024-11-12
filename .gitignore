@@ -1,32 +1,26 @@
 # Dependencies
 node_modules/
-**/node_modules/
-
+/node_modules/
 # Environment files
 .env
-**/.env
-
-# Firebase credentials
-serviceAccountKey.json
+/.env
+# Firebase
 **/serviceAccountKey.json
-
+serviceAccountKey.json
 # IDE files
 .vscode/
 .idea/
-
 # Logs
-*.log
-npm-debug.log*
-
+.log
+npm-debug.log
 # OS generated files
 .DS_Store
-.DS_Store?
-._*
+.DSStore?
+.*
 .Spotlight-V100
 .Trashes
 ehthumbs.db
 Thumbs.db
-
 # Build directories
 dist/
 build/

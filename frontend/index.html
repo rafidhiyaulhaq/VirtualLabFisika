@@ -15,7 +15,13 @@
                 <a href="#materi" class="nav-link">Materi</a>
                 <a href="#simulasi" class="nav-link">Simulasi</a>
                 <a href="#tentang" class="nav-link">Tentang</a>
-                <a href="parabola.html" class="nav-button">Mulai Simulasi Parabola</a>
+                <div id="userSection" style="display: none;">
+                    <span id="userEmail" class="nav-link"></span>
+                    <button id="logoutButton" class="nav-button">Logout</button>
+                </div>
+                <div id="authSection">
+                    <a href="login.html" class="nav-button">Login</a>
+                </div>
             </nav>
         </div>
     </header>
@@ -64,7 +70,7 @@
                                 <li>Rumus dan Perhitungan</li>
                                 <li>Contoh Soal</li>
                             </ul>
-                            <a href="#" class="card-button">Pelajari</a>
+                            <a href="parabola.html" class="card-button">Pelajari</a>
                         </div>
                     </div>
 
@@ -103,8 +109,100 @@
     </main>
 
     <footer class="footer">
-        <p>Muhammad Rafi Dhiyaulhaq</p>
-        <p>18222069</p>
+        <p>Virtual Lab Fisika © 2024</p>
+        <p>Dibuat oleh Muhammad Rafi Dhiyaulhaq - 18222069</p>
     </footer>
+
+    <script type="module">
+        import { initializeApp } from 'firebase/app';
+        import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
+        import { getFirestore, doc, getDoc } from 'firebase/firestore';
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyD4CYi9sjsW79ZiLcerhhOmIFR-Ygd8Ueo",
+            authDomain: "virtual-physics-lab.firebaseapp.com",
+            projectId: "virtual-physics-lab",
+            storageBucket: "virtual-physics-lab.firebasestorage.app",
+            messagingSenderId: "892280026110",
+            appId: "1:892280026110:web:9e7a605138121b324106af",
+            measurementId: "G-R3KWNLMH9G"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // DOM elements
+        const userSection = document.getElementById('userSection');
+        const authSection = document.getElementById('authSection');
+        const userEmail = document.getElementById('userEmail');
+        const logoutButton = document.getElementById('logoutButton');
+
+        // Auth state observer
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                // User is signed in
+                userSection.style.display = 'block';
+                authSection.style.display = 'none';
+                userEmail.textContent = user.email;
+
+                // Get user data from Firestore
+                try {
+                    const userDoc = await getDoc(doc(db, 'users', user.uid));
+                    if (userDoc.exists()) {
+                        const userData = userDoc.data();
+                        console.log('User data:', userData);
+                        // You can use userData to display user-specific information
+                    }
+                } catch (error) {
+                    console.error('Error getting user data:', error);
+                }
+
+                // Enable restricted content
+                document.querySelectorAll('.restricted').forEach(el => {
+                    el.style.display = 'block';
+                });
+            } else {
+                // User is signed out
+                userSection.style.display = 'none';
+                authSection.style.display = 'block';
+                userEmail.textContent = '';
+
+                // Disable restricted content
+                document.querySelectorAll('.restricted').forEach(el => {
+                    el.style.display = 'none';
+                });
+
+                // Optional: Redirect to login for restricted pages
+                if (window.location.pathname.includes('parabola.html')) {
+                    window.location.href = 'login.html';
+                }
+            }
+        });
+
+        // Logout handler
+        if (logoutButton) {
+            logoutButton.addEventListener('click', async () => {
+                try {
+                    await signOut(auth);
+                    window.location.href = 'login.html';
+                } catch (error) {
+                    console.error('Error signing out:', error);
+                }
+            });
+        }
+
+        // Protect restricted links
+        document.querySelectorAll('a[href="parabola.html"]').forEach(link => {
+            link.addEventListener('click', (e) => {
+                if (!auth.currentUser) {
+                    e.preventDefault();
+                    window.location.href = 'login.html';
+                }
+            });
+        });
+    </script>
 </body>
 </html>

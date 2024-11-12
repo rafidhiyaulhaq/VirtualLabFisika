@@ -1,3 +1,6 @@
+import { saveSimulationResult } from './database.js';
+import { getAuth } from 'firebase/auth';
+
 const canvas = document.getElementById('simulationCanvas');
 const ctx = canvas.getContext('2d');
 
@@ -7,7 +10,6 @@ canvas.height = 400;
 const GRAVITY = 9.81;
 const SCALE = 20;
 
-// Initial ball position
 let ballX = 80;
 let ballY = canvas.height - 120;
 let time = 0;
@@ -15,13 +17,11 @@ let isAnimating = false;
 let animationId = null;
 let pointScored = false;
 
-// Parameters
 let initialVelocity = 20;
 let angle = 45;
 let velocityX = 0;
 let velocityY = 0;
 
-// Tennis court constants
 const netX = canvas.width - 200;
 const netHeight = 100;
 const courtEnd = canvas.width - 50;
@@ -51,20 +51,10 @@ function updateDisplays() {
 }
 
 function checkPoint(x, y) {
-    // Ball must be past the net but before court end
-    if (x <= netX || x >= courtEnd) {
-        return false;
-    }
-    
-    // Ball must be at ground level
-    if (y < canvas.height - 10) {
-        return false;
-    }
-    
-    return true;
+    return x > netX && x < courtEnd && y >= canvas.height - 10;
 }
 
-function startSimulation() {
+async function startSimulation() {
     if (isAnimating) return;
     
     isAnimating = true;
@@ -73,6 +63,30 @@ function startSimulation() {
     const angleRad = angle * Math.PI / 180;
     velocityX = initialVelocity * Math.cos(angleRad);
     velocityY = initialVelocity * Math.sin(angleRad);
+    
+    // Save simulation parameters
+    try {
+        const auth = getAuth();
+        if (auth.currentUser) {
+            await saveSimulationResult({
+                type: 'parabola',
+                parameters: {
+                    initialVelocity,
+                    angle,
+                    gravity: GRAVITY
+                },
+                results: {
+                    maxHeight: calculateMaxHeight(),
+                    maxDistance: calculateMaxDistance(),
+                    timeOfFlight: (2 * velocityY) / GRAVITY
+                },
+                score: 0,
+                createdAt: new Date()
+            });
+        }
+    } catch (error) {
+        console.error('Error saving simulation:', error);
+    }
     
     animate();
 }
@@ -101,7 +115,7 @@ function animate() {
     // Check if ball hits the net
     if (x >= netX && x <= netX + 5 && y > canvas.height - netHeight) {
         isAnimating = false;
-        pointScored = false;  // Explicitly set to false when hitting net
+        pointScored = false;
         drawScene(x, y);
         return;
     }
@@ -109,8 +123,33 @@ function animate() {
     // Check if ball hits the ground
     if (y >= canvas.height - 10) {
         isAnimating = false;
-        pointScored = checkPoint(x, y);  // Set point status based on where ball landed
+        pointScored = checkPoint(x, y);
         drawScene(x, y);
+        // Update score in database if point scored
+        if (pointScored) {
+            try {
+                const auth = getAuth();
+                if (auth.currentUser) {
+                    saveSimulationResult({
+                        type: 'parabola',
+                        parameters: {
+                            initialVelocity,
+                            angle,
+                            gravity: GRAVITY
+                        },
+                        results: {
+                            maxHeight: calculateMaxHeight(),
+                            maxDistance: calculateMaxDistance(),
+                            timeOfFlight: time
+                        },
+                        score: 100,
+                        createdAt: new Date()
+                    });
+                }
+            } catch (error) {
+                console.error('Error saving score:', error);
+            }
+        }
         return;
     }
     
@@ -122,27 +161,37 @@ function animate() {
     }
 }
 
+function drawScene(x = ballX, y = ballY) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawTennisCourt();
+    drawPlayer();
+    drawBall(x, y);
+    drawTrajectory();
+    if (pointScored) {
+        drawPointText();
+    }
+}
+
 function drawTennisCourt() {
-    // Draw tennis court ground
+    // Court ground
     ctx.fillStyle = '#4caf50';
     ctx.fillRect(0, canvas.height - 10, canvas.width, 10);
     
-    // Draw net
+    // Net
     ctx.fillStyle = '#cccccc';
     ctx.fillRect(netX, canvas.height - netHeight, 5, netHeight);
     
-    // Draw net lines
-    const lineSpacing = 10;
+    // Net lines
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 1;
-    for (let y = canvas.height - netHeight; y < canvas.height; y += lineSpacing) {
+    for (let y = canvas.height - netHeight; y < canvas.height; y += 10) {
         ctx.beginPath();
         ctx.moveTo(netX, y);
         ctx.lineTo(netX + 5, y);
         ctx.stroke();
     }
     
-    // Draw court boundaries
+    // Court boundaries
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -151,34 +200,22 @@ function drawTennisCourt() {
     ctx.stroke();
 }
 
-function drawScene(x = ballX, y = ballY) {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Draw tennis court and net
-    drawTennisCourt();
-    
-    // Draw person stick figure
+function drawPlayer() {
     ctx.strokeStyle = '#000';
     ctx.lineWidth = 2;
-    
-    // Save current context state
     ctx.save();
-    
-    // Position stick figure slightly behind the ball's starting position
     ctx.translate(20, 0);
     
     // Head with baseball cap
     ctx.beginPath();
     ctx.arc(50, canvas.height - 100, 10, 0, Math.PI * 2);
     ctx.stroke();
-    
-    // Baseball cap
     ctx.beginPath();
     ctx.arc(50, canvas.height - 100, 10, Math.PI, 2 * Math.PI);
     ctx.lineTo(62, canvas.height - 100);
     ctx.stroke();
     
-    // Body - leaning back for serve position
+    // Body leaning back
     ctx.beginPath();
     ctx.moveTo(50, canvas.height - 90);
     ctx.lineTo(45, canvas.height - 60);
@@ -190,7 +227,6 @@ function drawScene(x = ballX, y = ballY) {
     ctx.lineTo(35, canvas.height - 35);
     ctx.lineTo(45, canvas.height - 10);
     ctx.stroke();
-
     ctx.beginPath();
     ctx.moveTo(45, canvas.height - 60);
     ctx.lineTo(55, canvas.height - 10);
@@ -201,13 +237,18 @@ function drawScene(x = ballX, y = ballY) {
     ctx.moveTo(45, canvas.height - 85);
     ctx.lineTo(35, canvas.height - 95);
     ctx.stroke();
-    
     ctx.beginPath();
     ctx.moveTo(45, canvas.height - 85);
     ctx.lineTo(65, canvas.height - 80);
     ctx.stroke();
     
     // Tennis racquet
+    drawRacquet();
+    
+    ctx.restore();
+}
+
+function drawRacquet() {
     // Handle
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -219,7 +260,7 @@ function drawScene(x = ballX, y = ballY) {
     ctx.beginPath();
     ctx.save();
     ctx.translate(55, canvas.height - 120);
-    ctx.rotate(Math.PI / 4); // Rotate 45 degrees
+    ctx.rotate(Math.PI / 4);
     ctx.ellipse(0, 0, 12, 16, 0, 0, Math.PI * 2);
     ctx.stroke();
     
@@ -243,17 +284,18 @@ function drawScene(x = ballX, y = ballY) {
     }
     
     ctx.restore();
-    ctx.restore();
-    
-    // Draw tennis ball
+}
+
+function drawBall(x, y) {
     ctx.fillStyle = '#bfff00';
     ctx.beginPath();
     ctx.arc(x, y, 5, 0, Math.PI * 2);
     ctx.fill();
     ctx.strokeStyle = '#ffffff';
     ctx.stroke();
-    
-    // Draw trajectory
+}
+
+function drawTrajectory() {
     if (isAnimating) {
         ctx.strokeStyle = '#9ca3af';
         ctx.setLineDash([5, 5]);
@@ -268,24 +310,23 @@ function drawScene(x = ballX, y = ballY) {
         ctx.stroke();
         ctx.setLineDash([]);
     }
+}
 
-    // Display "POINT!" text when scored
-    if (pointScored) {
-        ctx.save();
-        ctx.font = 'bold 48px Arial';
-        ctx.fillStyle = '#4CAF50';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        
-        // Add white outline to text
-        ctx.strokeStyle = 'white';
-        ctx.lineWidth = 2;
-        ctx.strokeText('POINT!', canvas.width/2, canvas.height/2);
-        
-        // Fill text
-        ctx.fillText('POINT!', canvas.width/2, canvas.height/2);
-        ctx.restore();
-    }
+function drawPointText() {
+    ctx.save();
+    ctx.font = 'bold 48px Arial';
+    ctx.fillStyle = '#4CAF50';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    // Add white outline to text
+    ctx.strokeStyle = 'white';
+    ctx.lineWidth = 2;
+    ctx.strokeText('POINT!', canvas.width/2, canvas.height/2);
+    
+    // Fill text
+    ctx.fillText('POINT!', canvas.width/2, canvas.height/2);
+    ctx.restore();
 }
 
 // Event listeners

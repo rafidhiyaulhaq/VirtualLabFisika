@@ -122,7 +122,7 @@
     </footer>
 
     <script type="module">
-        import { onAuthStateChanged, logoutUser } from './js/auth.js';
+        import { onAuthStateChanged, logoutUser } from './auth.js';
         
         // Check if user is logged in
         onAuthStateChanged((user) => {
@@ -142,6 +142,6 @@
             }
         });
     </script>
-    <script type="module" src="js/parabola.js"></script>
+    <script type="module" src="./parabola.js"></script>
 </body>
 </html>

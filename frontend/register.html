@@ -5,68 +5,255 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daftar - Virtual Lab Fisika</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(to right, #3b82f6, #2563eb);
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+
+        .auth-box {
+            background: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .auth-box h2 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: #1a1a1a;
+            font-size: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #4b5563;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+        }
+
+        .primary-button {
+            width: 100%;
+            padding: 0.75rem;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            margin-bottom: 1rem;
+            transition: background-color 0.2s;
+        }
+
+        .primary-button:hover {
+            background: #2563eb;
+        }
+
+        .google-button {
+            width: 100%;
+            padding: 0.75rem;
+            background: white;
+            color: #1a1a1a;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: background-color 0.2s;
+        }
+
+        .google-button:hover {
+            background: #f3f4f6;
+        }
+
+        .divider {
+            text-align: center;
+            margin: 1rem 0;
+            position: relative;
+            color: #6b7280;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            width: 45%;
+            height: 1px;
+            background: #d1d5db;
+        }
+
+        .divider::before {
+            left: 0;
+        }
+
+        .divider::after {
+            right: 0;
+        }
+
+        .auth-footer {
+            text-align: center;
+            margin-top: 1rem;
+            color: #6b7280;
+        }
+
+        .auth-footer a {
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .auth-footer a:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            color: #dc2626;
+            text-align: center;
+            margin-top: 0.5rem;
+            display: none;
+        }
+    </style>
 </head>
 <body>
-    <div class="auth-container">
-        <div class="auth-box">
-            <h2>Daftar Akun Baru</h2>
-            <form id="registerForm">
-                <div class="form-group">
-                    <label for="displayName">Nama Lengkap</label>
-                    <input type="text" id="displayName" required>
-                </div>
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" required>
-                </div>
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" required>
-                </div>
-                <button type="submit" class="primary-button">Daftar</button>
-                <div id="errorMessage" class="error-message"></div>
-            </form>
-            
-            <div class="divider">atau</div>
-            
-            <button id="googleRegister" class="google-button">
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" height="18" alt="Google logo">
-                Daftar dengan Google
-            </button>
-            
-            <p class="auth-footer">
-                Sudah punya akun? <a href="login.html">Login</a>
-            </p>
-        </div>
+    <div class="auth-box">
+        <h2>Daftar Akun Baru</h2>
+        <form id="registerForm">
+            <div class="form-group">
+                <label for="displayName">Nama Lengkap</label>
+                <input type="text" id="displayName" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" required>
+            </div>
+            <button type="submit" class="primary-button">Daftar</button>
+            <div id="errorMessage" class="error-message"></div>
+        </form>
+        
+        <div class="divider">atau</div>
+        
+        <button id="googleRegister" class="google-button">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" height="18" alt="Google logo">
+            Daftar dengan Google
+        </button>
+        
+        <p class="auth-footer">
+            Sudah punya akun? <a href="login.html">Login</a>
+        </p>
     </div>
 
     <script type="module">
-        import { registerWithEmail, loginWithGoogle } from './js/auth.js';
+        import { initializeApp } from 'firebase/app';
+        import { 
+            getAuth, 
+            createUserWithEmailAndPassword, 
+            signInWithPopup, 
+            GoogleAuthProvider,
+            updateProfile 
+        } from 'firebase/auth';
+        import { getFirestore, doc, setDoc } from 'firebase/firestore';
 
-        const errorMessage = document.getElementById('errorMessage');
-        
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyD4CYi9sjsW79ZiLcerhhOmIFR-Ygd8Ueo",
+            authDomain: "virtual-physics-lab.firebaseapp.com",
+            projectId: "virtual-physics-lab",
+            storageBucket: "virtual-physics-lab.firebasestorage.app",
+            messagingSenderId: "892280026110",
+            appId: "1:892280026110:web:9e7a605138121b324106af",
+            measurementId: "G-R3KWNLMH9G"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const googleProvider = new GoogleAuthProvider();
+
+        // Create user document in Firestore
+        async function createUserDocument(user, extraData = {}) {
+            const userRef = doc(db, 'users', user.uid);
+            await setDoc(userRef, {
+                email: user.email,
+                displayName: user.displayName || extraData.displayName || '',
+                progress: {
+                    completedSimulations: 0,
+                    lastAccessed: new Date()
+                },
+                createdAt: new Date()
+            }, { merge: true });
+        }
+
+        // Register with email/password
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+            const errorMessage = document.getElementById('errorMessage');
+            const displayName = document.getElementById('displayName').value;
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            const displayName = document.getElementById('displayName').value;
             
             try {
-                await registerWithEmail(email, password, displayName);
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                
+                // Update profile with display name
+                await updateProfile(user, { displayName });
+                
+                // Create user document
+                await createUserDocument(user, { displayName });
+                
+                // Redirect to home page
                 window.location.href = 'index.html';
             } catch (error) {
                 errorMessage.style.display = 'block';
-                errorMessage.textContent = 'Registrasi gagal: ' + error.message;
+                errorMessage.textContent = error.message;
             }
         });
 
+        // Register with Google
         document.getElementById('googleRegister').addEventListener('click', async () => {
+            const errorMessage = document.getElementById('errorMessage');
             try {
-                await loginWithGoogle();
+                const result = await signInWithPopup(auth, googleProvider);
+                const user = result.user;
+                
+                // Create user document
+                await createUserDocument(user);
+                
+                // Redirect to home page
                 window.location.href = 'index.html';
             } catch (error) {
                 errorMessage.style.display = 'block';
-                errorMessage.textContent = 'Registrasi dengan Google gagal: ' + error.message;
+                errorMessage.textContent = error.message;
             }
         });
     </script>

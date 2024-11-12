@@ -14,6 +14,7 @@
   "license": "ISC",
   "description": "Virtual Lab Fisika with Firebase",
   "dependencies": {
+    "@firebasegen/default-connector": "file:dataconnect-generated/js/default-connector",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.21.1",

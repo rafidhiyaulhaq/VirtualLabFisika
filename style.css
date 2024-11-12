@@ -139,12 +139,123 @@ body {
     transform: translateY(-1px);
 }
 
+/* Stats Section */
+.stats-section {
+    padding: 4rem 1.5rem;
+    background: white;
+}
+
+.stats-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 1.5rem;
+}
+
+.stat-title {
+    font-size: 1.25rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    color: #1a1a1a;
+}
+
+/* Materials Section */
+.materials-section {
+    padding: 4rem 1.5rem;
+    background: #f3f4f6;
+}
+
+.materials-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.section-title {
+    font-size: 1.875rem;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 3rem;
+    color: #1a1a1a;
+}
+
+.materials-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.material-card {
+    background: white;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease-in-out;
+}
+
+.material-card:hover {
+    transform: translateY(-5px);
+}
+
+.card-header {
+    background: #3b82f6;
+    color: white;
+    padding: 1rem;
+}
+
+.card-header h3 {
+    font-size: 1.25rem;
+    font-weight: bold;
+}
+
+.card-content {
+    padding: 1.5rem;
+}
+
+.card-content ul {
+    list-style-type: none;
+    margin-bottom: 1.5rem;
+}
+
+.card-content li {
+    margin-bottom: 0.5rem;
+    padding-left: 1.5rem;
+    position: relative;
+}
+
+.card-content li:before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    color: #3b82f6;
+}
+
+.card-button {
+    display: block;
+    text-align: center;
+    background: #3b82f6;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    text-decoration: none;
+    transition: all 0.2s ease-in-out;
+}
+
+.card-button:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+}
+
 /* Simulation Layout */
 .simulation-container {
     max-width: 1200px;
     margin: 0 auto;
     padding: 2rem 1.5rem;
-    margin-top: 2rem;
 }
 
 .simulation-layout {
@@ -155,22 +266,9 @@ body {
 }
 
 .simulation-main {
-    background: white;
-    padding: 1rem;
-    border-radius: 0.5rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-/* Canvas Styles */
-#simulationCanvas {
-    width: 100%;
-    height: 400px;
-    background: #f0f9ff;
-    border: 1px solid #ddd;
-    border-radius: 0.5rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    display: block;
-    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
 }
 
 .instruction-box {
@@ -317,6 +415,81 @@ body {
     color: #1a1a1a;
 }
 
+/* Canvas Styles */
+#simulationCanvas {
+    width: 100%;
+    height: 400px;
+    background: #f0f9ff;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Tennis Court Styles */
+.tennis-court {
+    background-color: #4caf50;
+}
+
+.tennis-net {
+    background-color: #eeeeee;
+}
+
+/* Concept Explanation */
+.concept-explanation {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-top: 2rem;
+}
+
+.concept-explanation h2 {
+    font-size: 1.25rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    color: #1a1a1a;
+}
+
+.concept-explanation h3 {
+    font-size: 1.125rem;
+    font-weight: bold;
+    margin: 1rem 0 0.5rem;
+    color: #1a1a1a;
+}
+
+.concept-explanation p {
+    margin-bottom: 1rem;
+}
+
+.concept-explanation ul {
+    list-style-type: none;
+    margin: 1rem 0;
+}
+
+.concept-explanation li {
+    margin-bottom: 1rem;
+}
+
+.concept-explanation em {
+    display: block;
+    margin-top: 0.25rem;
+    color: #666;
+    font-style: normal;
+    font-family: monospace;
+    background: #f8fafc;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+}
+
+.note {
+    font-size: 0.875rem;
+    color: #666;
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background: #f8fafc;
+    border-radius: 0.25rem;
+    border-left: 4px solid #3b82f6;
+}
+
 /* Button Group */
 .button-group {
     display: flex;
@@ -334,8 +507,21 @@ body {
 
 /* Responsive Design */
 @media (max-width: 768px) {
+    .hero-title {
+        font-size: 2.5rem;
+    }
+    
     .simulation-layout {
         grid-template-columns: 1fr;
+    }
+    
+    .materials-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .hero-buttons {
+        flex-direction: column;
+        align-items: center;
     }
     
     .nav-links {
@@ -350,5 +536,9 @@ body {
     
     .section-title {
         font-size: 1.5rem;
+    }
+    
+    .card-content {
+        padding: 1rem;
     }
 }

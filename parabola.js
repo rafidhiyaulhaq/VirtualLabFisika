@@ -4,8 +4,10 @@ import { getAuth } from 'firebase/auth';
 const canvas = document.getElementById('simulationCanvas');
 const ctx = canvas.getContext('2d');
 
-canvas.width = 800;
-canvas.height = 400;
+canvas.style.width = '100%';
+canvas.style.height = '400px';
+canvas.width = canvas.offsetWidth;
+canvas.height = canvas.offsetHeight;
 
 const GRAVITY = 9.81;
 const SCALE = 20;

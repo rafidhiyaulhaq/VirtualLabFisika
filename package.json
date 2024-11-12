@@ -1,21 +1,29 @@
 {
   "name": "virtuallabfisika",
   "version": "1.0.0",
-  "main": "index.js",
+  "type": "module",
+  "main": "backend/server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node backend/server.js",
+    "dev:backend": "nodemon backend/server.js",
+    "dev:frontend": "serve .",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\""
   },
   "keywords": [],
-  "author": "",
+  "author": "Muhammad Rafi Dhiyaulhaq",
   "license": "ISC",
-  "description": "",
+  "description": "Virtual Lab Fisika with Firebase",
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
     "firebase": "^11.0.1",
     "firebase-admin": "^12.7.0",
-    "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.8.1"
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "nodemon": "^2.0.22",
+    "serve": "^14.2.1"
   }
 }

@@ -269,6 +269,10 @@ body {
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    background: white;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .instruction-box {
@@ -422,8 +426,9 @@ body {
     background: #f0f9ff;
     border-radius: 0.5rem;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: block;
+    margin: 0 auto;
 }
-
 /* Tennis Court Styles */
 .tennis-court {
     background-color: #4caf50;

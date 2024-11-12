@@ -1,4 +1,3 @@
-// server.js
 const express = require('express');
 const cors = require('cors');
 const admin = require('firebase-admin');
@@ -15,7 +14,8 @@ app.use(express.json());
 const serviceAccount = require('./serviceAccountKey.json');
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  projectId: 'virtual-physics-lab'
+  projectId: 'virtual-physics-lab',
+  databaseURL: `https://virtual-physics-lab.firebaseio.com`
 });
 
 // Firestore reference

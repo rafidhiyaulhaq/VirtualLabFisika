@@ -424,43 +424,6 @@ body {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.progress-section {
-    padding: 2rem 1.5rem;
-    background: #f3f4f6;
-}
-
-.progress-container {
-    max-width: 1200px;
-    margin: 0 auto;
-}
-
-.progress-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    margin-top: 1rem;
-}
-
-.stat-card {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 0.5rem;
-    text-align: center;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.stat-card h3 {
-    color: #4b5563;
-    font-size: 1rem;
-    margin-bottom: 0.5rem;
-}
-
-.stat-card p {
-    color: #1a1a1a;
-    font-size: 1.5rem;
-    font-weight: bold;
-}
-
 /* Tennis Court Styles */
 .tennis-court {
     background-color: #4caf50;

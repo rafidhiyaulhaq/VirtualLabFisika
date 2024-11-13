@@ -10,35 +10,6 @@ import {
 } from 'firebase/auth';
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
 import { getAnalytics } from "firebase/analytics";
-
-// Error handler function
-const handleAuthError = (error) => {
-    let message = '';
-    switch (error.code) {
-      case 'auth/wrong-password':
-        message = 'Password salah. Silakan coba lagi.';
-        break;
-      case 'auth/user-not-found':
-        message = 'Email tidak terdaftar.';
-        break;
-      case 'auth/email-already-in-use':
-        message = 'Email sudah terdaftar.';
-        break;
-      case 'auth/weak-password':
-        message = 'Password terlalu lemah. Minimal 6 karakter.';
-        break;
-      case 'auth/invalid-email':
-        message = 'Format email tidak valid.';
-        break;
-      case 'auth/network-request-failed':
-        message = 'Koneksi gagal. Periksa internet Anda.';
-        break;
-      default:
-        message = error.message;
-    }
-    throw new Error(message);
-  };
-
 // Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyD4CYi9sjsW79ZiLcerhhOmIFR-Ygd8Ueo",
@@ -49,19 +20,16 @@ const firebaseConfig = {
     appId: "1:892280026110:web:9e7a605138121b324106af",
     measurementId: "G-R3KWNLMH9G"
 };
-
 // Initialize Firebase
 export const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const analytics = getAnalytics(app);
 const googleProvider = new GoogleAuthProvider();
-
 // Configure Google Provider
 googleProvider.setCustomParameters({
     prompt: 'select_account'
 });
-
 // Create user document in Firestore
 const createUserDocument = async (user) => {
     const userRef = doc(db, 'users', user.uid);
@@ -75,19 +43,18 @@ const createUserDocument = async (user) => {
         createdAt: new Date()
     }, { merge: true });
 };
-
-// Modify the existing login function
+// Login with email/password
 export const loginWithEmail = async (email, password) => {
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      const token = await user.getIdToken();
-      return { user, token };
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+        const token = await user.getIdToken();
+        return { user, token };
     } catch (error) {
-      throw handleAuthError(error);
+        console.error('Login error:', error);
+        throw error;
     }
-  };
-
+};
 // Register with email/password
 export const registerWithEmail = async (email, password, displayName) => {
     try {
@@ -107,7 +74,6 @@ export const registerWithEmail = async (email, password, displayName) => {
         throw error;
     }
 };
-
 // Login with Google
 export const loginWithGoogle = async () => {
     try {
@@ -121,7 +87,6 @@ export const loginWithGoogle = async () => {
         throw error;
     }
 };
-
 // Sign out
 export const logoutUser = async () => {
     try {
@@ -131,7 +96,6 @@ export const logoutUser = async () => {
         throw error;
     }
 };
-
 // Check auth state
 export const onAuthStateChanged = (callback) => {
     return auth.onAuthStateChanged(callback);

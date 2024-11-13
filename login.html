@@ -183,6 +183,22 @@
             }
         });
 
+        const firebaseConfig = {
+            apiKey: "AIzaSyD4CYi9sjsW79ZiLcerhhOmIFR-Ygd8Ueo",
+            authDomain: "virtual-physics-lab.firebaseapp.com",
+            projectId: "virtual-physics-lab",
+            storageBucket: "virtual-physics-lab.firebasestorage.app",
+            messagingSenderId: "892280026110",
+            appId: "1:892280026110:web:9e7a605138121b324106af",
+            measurementId: "G-R3KWNLMH9G"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const googleProvider = new GoogleAuthProvider();  
+
         document.getElementById('googleLogin').addEventListener('click', async () => {
             try {
                 const result = await loginWithGoogle();

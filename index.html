@@ -5,6 +5,56 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Virtual Lab Fisika</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Additional styles specific to index page */
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-email {
+            color: #4b5563;
+            font-size: 0.875rem;
+        }
+
+        .restricted {
+            display: none;
+        }
+
+        .progress-overview {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-top: 2rem;
+        }
+
+        .progress-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .progress-item {
+            text-align: center;
+            padding: 1rem;
+            background: #f3f4f6;
+            border-radius: 0.375rem;
+        }
+
+        .progress-item h4 {
+            color: #4b5563;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #3b82f6;
+        }
+    </style>
 </head>
 <body>
     <header class="header">
@@ -14,10 +64,11 @@
                 <a href="#beranda" class="nav-link">Beranda</a>
                 <a href="#materi" class="nav-link">Materi</a>
                 <a href="#simulasi" class="nav-link">Simulasi</a>
-                <a href="#tentang" class="nav-link">Tentang</a>
                 <div id="userSection" style="display: none;">
-                    <span id="userEmail" class="nav-link"></span>
-                    <button id="logoutButton" class="nav-button">Logout</button>
+                    <div class="user-info">
+                        <span id="userEmail" class="user-email"></span>
+                        <button id="logoutButton" class="nav-button">Logout</button>
+                    </div>
                 </div>
                 <div id="authSection">
                     <a href="login.html" class="nav-button">Login</a>
@@ -31,7 +82,7 @@
             <h1 class="hero-title">Virtual Lab Fisika</h1>
             <p class="hero-description">Pelajari fisika melalui simulasi interaktif dan materi pembelajaran yang menarik</p>
             <div class="hero-buttons">
-                <a href="parabola.html" class="primary-button">Mulai Simulasi Parabola</a>
+                <a href="parabola.html" class="primary-button restricted">Mulai Simulasi Parabola</a>
                 <a href="#materi" class="secondary-button">Pelajari Materi</a>
             </div>
         </div>
@@ -41,16 +92,16 @@
         <section id="highlight" class="stats-section">
             <div class="stats-container">
                 <div class="stat-item">
-                    <h3 class="stat-title">10,000+ Pengguna</h3>
-                    <p>Bergabung dalam pembelajaran interaktif</p>
+                    <h3 class="stat-title">Simulasi Interaktif</h3>
+                    <p>Pahami konsep fisika melalui eksperimen virtual</p>
                 </div>
                 <div class="stat-item">
-                    <h3 class="stat-title">100+ Materi</h3>
+                    <h3 class="stat-title">Progress Tracking</h3>
+                    <p>Pantau perkembangan pembelajaran Anda</p>
+                </div>
+                <div class="stat-item">
+                    <h3 class="stat-title">Materi Lengkap</h3>
                     <p>Pembelajaran fisika yang komprehensif</p>
-                </div>
-                <div class="stat-item">
-                    <h3 class="stat-title">50+ Simulasi</h3>
-                    <p>Eksperimen virtual yang interaktif</p>
                 </div>
             </div>
         </section>
@@ -70,7 +121,7 @@
                                 <li>Rumus dan Perhitungan</li>
                                 <li>Contoh Soal</li>
                             </ul>
-                            <a href="parabola.html" class="card-button">Pelajari</a>
+                            <a href="parabola.html" class="card-button restricted">Mulai Simulasi</a>
                         </div>
                     </div>
 
@@ -85,7 +136,7 @@
                                 <li>Momentum</li>
                                 <li>Aplikasi</li>
                             </ul>
-                            <a href="#" class="card-button">Pelajari</a>
+                            <a href="#" class="card-button">Segera Hadir</a>
                         </div>
                     </div>
 
@@ -100,8 +151,28 @@
                                 <li>Hukum Kekekalan</li>
                                 <li>Penerapan</li>
                             </ul>
-                            <a href="#" class="card-button">Pelajari</a>
+                            <a href="#" class="card-button">Segera Hadir</a>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="progress" class="progress-overview restricted">
+            <div class="materials-container">
+                <h2 class="section-title">Progress Pembelajaran</h2>
+                <div class="progress-grid">
+                    <div class="progress-item">
+                        <h4>Total Simulasi</h4>
+                        <div id="totalSimulations" class="progress-value">0</div>
+                    </div>
+                    <div class="progress-item">
+                        <h4>Skor Terbaik</h4>
+                        <div id="bestScore" class="progress-value">0</div>
+                    </div>
+                    <div class="progress-item">
+                        <h4>Simulasi Terakhir</h4>
+                        <div id="lastSimulation" class="progress-value">-</div>
                     </div>
                 </div>
             </div>
@@ -139,6 +210,37 @@
         const authSection = document.getElementById('authSection');
         const userEmail = document.getElementById('userEmail');
         const logoutButton = document.getElementById('logoutButton');
+        const restrictedElements = document.querySelectorAll('.restricted');
+
+        // Update progress display
+        async function updateProgressDisplay(userId) {
+            try {
+                const userDoc = await getDoc(doc(db, 'users', userId));
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    const progress = userData.progress || {};
+                    const parabolaProgress = progress.parabolaSimulation || {};
+
+                    // Update progress elements if they exist
+                    const totalSimulations = document.getElementById('totalSimulations');
+                    const bestScore = document.getElementById('bestScore');
+                    const lastSimulation = document.getElementById('lastSimulation');
+
+                    if (totalSimulations) {
+                        totalSimulations.textContent = progress.completedSimulations || 0;
+                    }
+                    if (bestScore) {
+                        bestScore.textContent = parabolaProgress.bestScore || 0;
+                    }
+                    if (lastSimulation && parabolaProgress.lastAttempt) {
+                        const lastDate = new Date(parabolaProgress.lastAttempt.toDate());
+                        lastSimulation.textContent = lastDate.toLocaleDateString();
+                    }
+                }
+            } catch (error) {
+                console.error('Error getting user data:', error);
+            }
+        }
 
         // Auth state observer
         onAuthStateChanged(auth, async (user) => {
@@ -148,37 +250,19 @@
                 authSection.style.display = 'none';
                 userEmail.textContent = user.email;
 
-                // Get user data from Firestore
-                try {
-                    const userDoc = await getDoc(doc(db, 'users', user.uid));
-                    if (userDoc.exists()) {
-                        const userData = userDoc.data();
-                        console.log('User data:', userData);
-                        // You can use userData to display user-specific information
-                    }
-                } catch (error) {
-                    console.error('Error getting user data:', error);
-                }
+                // Show restricted content
+                restrictedElements.forEach(el => el.style.display = 'block');
 
-                // Enable restricted content
-                document.querySelectorAll('.restricted').forEach(el => {
-                    el.style.display = 'block';
-                });
+                // Update progress display
+                await updateProgressDisplay(user.uid);
             } else {
                 // User is signed out
                 userSection.style.display = 'none';
                 authSection.style.display = 'block';
                 userEmail.textContent = '';
 
-                // Disable restricted content
-                document.querySelectorAll('.restricted').forEach(el => {
-                    el.style.display = 'none';
-                });
-
-                // Optional: Redirect to login for restricted pages
-                if (window.location.pathname.includes('parabola.html')) {
-                    window.location.href = 'login.html';
-                }
+                // Hide restricted content
+                restrictedElements.forEach(el => el.style.display = 'none');
             }
         });
 

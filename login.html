@@ -78,6 +78,7 @@
             justify-content: center;
             gap: 0.5rem;
             transition: background-color 0.2s;
+            margin-top: 1rem;
         }
 
         .google-button:hover {
@@ -163,20 +164,46 @@
     </div>
 
     <script type="module">
-        import { loginWithEmail, loginWithGoogle } from './auth.js';
+        import { initializeApp } from 'firebase/app';
+        import { 
+            getAuth, 
+            signInWithEmailAndPassword, 
+            signInWithPopup,
+            GoogleAuthProvider 
+        } from 'firebase/auth';
+        import { getFirestore, doc, setDoc } from 'firebase/firestore';
 
-        const errorMessage = document.getElementById('errorMessage');
-        
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyD4CYi9sjsW79ZiLcerhhOmIFR-Ygd8Ueo",
+            authDomain: "virtual-physics-lab.firebaseapp.com",
+            projectId: "virtual-physics-lab",
+            storageBucket: "virtual-physics-lab.firebasestorage.app",
+            messagingSenderId: "892280026110",
+            appId: "1:892280026110:web:9e7a605138121b324106af",
+            measurementId: "G-R3KWNLMH9G"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const googleProvider = new GoogleAuthProvider();
+
+        // Handle login form submission
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+            const errorMessage = document.getElementById('errorMessage');
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             
             try {
-                const result = await loginWithEmail(email, password);
-                // Simpan token JWT
-                localStorage.setItem('token', result.token);
-                // Redirect ke halaman utama
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                // Update last login in Firestore
+                await setDoc(doc(db, 'users', userCredential.user.uid), {
+                    lastLogin: new Date()
+                }, { merge: true });
+                
                 window.location.href = 'index.html';
             } catch (error) {
                 errorMessage.style.display = 'block';
@@ -184,10 +211,16 @@
             }
         });
 
+        // Handle Google login
         document.getElementById('googleLogin').addEventListener('click', async () => {
+            const errorMessage = document.getElementById('errorMessage');
             try {
-                const result = await loginWithGoogle();
-                localStorage.setItem('token', result.token);
+                const result = await signInWithPopup(auth, googleProvider);
+                // Update last login in Firestore
+                await setDoc(doc(db, 'users', result.user.uid), {
+                    lastLogin: new Date()
+                }, { merge: true });
+                
                 window.location.href = 'index.html';
             } catch (error) {
                 errorMessage.style.display = 'block';

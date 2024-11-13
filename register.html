@@ -6,14 +6,13 @@
     <title>Daftar - Virtual Lab Fisika</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        body {
-            margin: 0;
+        .auth-container {
             min-height: 100vh;
             display: flex;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
             background: linear-gradient(to right, #3b82f6, #2563eb);
-            font-family: system-ui, -apple-system, sans-serif;
+            padding: 1rem;
         }
 
         .auth-box {
@@ -140,35 +139,37 @@
     </style>
 </head>
 <body>
-    <div class="auth-box">
-        <h2>Daftar Akun Baru</h2>
-        <form id="registerForm">
-            <div class="form-group">
-                <label for="displayName">Nama Lengkap</label>
-                <input type="text" id="displayName" required>
-            </div>
-            <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" required>
-            </div>
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" required>
-            </div>
-            <button type="submit" class="primary-button">Daftar</button>
-            <div id="errorMessage" class="error-message"></div>
-        </form>
-        
-        <div class="divider">atau</div>
-        
-        <button id="googleRegister" class="google-button">
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" height="18" alt="Google logo">
-            Daftar dengan Google
-        </button>
-        
-        <p class="auth-footer">
-            Sudah punya akun? <a href="login.html">Login</a>
-        </p>
+    <div class="auth-container">
+        <div class="auth-box">
+            <h2>Daftar Akun Baru</h2>
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="displayName">Nama Lengkap</label>
+                    <input type="text" id="displayName" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required>
+                </div>
+                <button type="submit" class="primary-button">Daftar</button>
+                <div id="errorMessage" class="error-message"></div>
+            </form>
+            
+            <div class="divider">atau</div>
+            
+            <button id="googleRegister" class="google-button">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" height="18" alt="Google logo">
+                Daftar dengan Google
+            </button>
+            
+            <p class="auth-footer">
+                Sudah punya akun? <a href="login.html">Login</a>
+            </p>
+        </div>
     </div>
 
     <script type="module">
@@ -207,13 +208,18 @@
                 displayName: user.displayName || extraData.displayName || '',
                 progress: {
                     completedSimulations: 0,
-                    lastAccessed: new Date()
+                    parabolaSimulation: {
+                        attempts: 0,
+                        bestScore: 0,
+                        lastScore: 0,
+                        lastAttempt: null
+                    }
                 },
                 createdAt: new Date()
-            }, { merge: true });
+            });
         }
 
-        // Register with email/password
+        // Handle registration form submission
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const errorMessage = document.getElementById('errorMessage');
@@ -231,15 +237,26 @@
                 // Create user document
                 await createUserDocument(user, { displayName });
                 
-                // Redirect to home page
                 window.location.href = 'index.html';
             } catch (error) {
                 errorMessage.style.display = 'block';
-                errorMessage.textContent = error.message;
+                switch (error.code) {
+                    case 'auth/weak-password':
+                        errorMessage.textContent = 'Password terlalu lemah. Minimal 6 karakter.';
+                        break;
+                    case 'auth/email-already-in-use':
+                        errorMessage.textContent = 'Email sudah terdaftar.';
+                        break;
+                    case 'auth/invalid-email':
+                        errorMessage.textContent = 'Format email tidak valid.';
+                        break;
+                    default:
+                        errorMessage.textContent = error.message;
+                }
             }
         });
 
-        // Register with Google
+        // Handle Google registration
         document.getElementById('googleRegister').addEventListener('click', async () => {
             const errorMessage = document.getElementById('errorMessage');
             try {
@@ -249,11 +266,10 @@
                 // Create user document
                 await createUserDocument(user);
                 
-                // Redirect to home page
                 window.location.href = 'index.html';
             } catch (error) {
                 errorMessage.style.display = 'block';
-                errorMessage.textContent = error.message;
+                errorMessage.textContent = 'Registrasi dengan Google gagal: ' + error.message;
             }
         });
     </script>

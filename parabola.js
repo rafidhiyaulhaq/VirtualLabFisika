@@ -1,7 +1,3 @@
-import { saveSimulationResult, getUserProgress } from './database.js';
-import { getAuth } from 'firebase/auth';
-
-const auth = getAuth();
 const canvas = document.getElementById('simulationCanvas');
 const ctx = canvas.getContext('2d');
 
@@ -30,25 +26,6 @@ const netX = canvas.width - 200;
 const netHeight = 100;
 const courtEnd = canvas.width - 50;
 
-// Calculate score based on parameters and success
-function calculateScore(success, time, angle, velocity) {
-    if (!success) return 0;
-    
-    let score = 100; // Base score for successful shot
-    
-    // Bonus for optimal angle (around 45 degrees)
-    const angleDiff = Math.abs(45 - angle);
-    if (angleDiff < 5) score += 20;
-    
-    // Bonus for quick completion
-    if (time < 2) score += 30;
-    
-    // Bonus for moderate velocity
-    if (velocity >= 15 && velocity <= 25) score += 20;
-    
-    return Math.min(score, 150); // Maximum score is 150
-}
-
 function calculateMaxDistance() {
     const angleRad = angle * Math.PI / 180;
     return (initialVelocity * initialVelocity * Math.sin(2 * angleRad)) / GRAVITY;
@@ -59,7 +36,7 @@ function calculateMaxHeight() {
     return (initialVelocity * initialVelocity * Math.sin(angleRad) * Math.sin(angleRad)) / (2 * GRAVITY);
 }
 
-async function updateDisplays() {
+function updateDisplays() {
     document.getElementById('velocityValue').textContent = `${initialVelocity} m/s`;
     document.getElementById('angleValue').textContent = `${angle}°`;
     
@@ -71,19 +48,24 @@ async function updateDisplays() {
     document.getElementById('vy').textContent = velocityY.toFixed(2);
     document.getElementById('maxDistance').textContent = calculateMaxDistance().toFixed(2);
     document.getElementById('maxHeight').textContent = calculateMaxHeight().toFixed(2);
-
-    // Update progress display if user is logged in
-    if (auth.currentUser) {
-        await updateProgressDisplay();
-    }
 }
 
 function checkPoint(x, y) {
-    return (x > netX && x < courtEnd && y >= canvas.height - 10);
+    // Ball must be past the net but before court end
+    if (x <= netX || x >= courtEnd) {
+        return false;
+    }
+    
+    // Ball must be at ground level
+    if (y < canvas.height - 10) {
+        return false;
+    }
+    
+    return true;
 }
 
-async function startSimulation() {
-    if (isAnimating || !auth.currentUser) return;
+function startSimulation() {
+    if (isAnimating) return;
     
     isAnimating = true;
     pointScored = false;
@@ -93,38 +75,6 @@ async function startSimulation() {
     velocityY = initialVelocity * Math.sin(angleRad);
     
     animate();
-    
-    // Wait for animation to complete
-    await new Promise(resolve => {
-        const checkComplete = setInterval(() => {
-            if (!isAnimating) {
-                clearInterval(checkComplete);
-                resolve();
-            }
-        }, 100);
-    });
-    
-    // Save result to database
-    try {
-        const score = calculateScore(pointScored, time, angle, initialVelocity);
-        const maxHeight = calculateMaxHeight();
-        const maxDistance = calculateMaxDistance();
-        
-        await saveSimulationResult({
-            initialVelocity,
-            angle,
-            time,
-            distance: maxDistance,
-            maxHeight,
-            isSuccess: pointScored,
-            score
-        });
-        
-        // Update displayed progress
-        await updateProgressDisplay();
-    } catch (error) {
-        console.error('Error saving simulation result:', error);
-    }
 }
 
 function resetSimulation() {
@@ -151,7 +101,7 @@ function animate() {
     // Check if ball hits the net
     if (x >= netX && x <= netX + 5 && y > canvas.height - netHeight) {
         isAnimating = false;
-        pointScored = false;
+        pointScored = false;  // Explicitly set to false when hitting net
         drawScene(x, y);
         return;
     }
@@ -159,7 +109,7 @@ function animate() {
     // Check if ball hits the ground
     if (y >= canvas.height - 10) {
         isAnimating = false;
-        pointScored = checkPoint(x, y);
+        pointScored = checkPoint(x, y);  // Set point status based on where ball landed
         drawScene(x, y);
         return;
     }
@@ -169,22 +119,6 @@ function animate() {
     
     if (isAnimating) {
         animationId = requestAnimationFrame(animate);
-    }
-}
-
-// Update progress display
-async function updateProgressDisplay() {
-    try {
-        const progress = await getUserProgress();
-        const parabolaProgress = progress.parabolaSimulation;
-        
-        if (parabolaProgress) {
-            document.getElementById('bestScore').textContent = parabolaProgress.bestScore || 0;
-            document.getElementById('attempts').textContent = parabolaProgress.attempts || 0;
-            document.getElementById('lastScore').textContent = parabolaProgress.lastScore || 0;
-        }
-    } catch (error) {
-        console.error('Error updating progress display:', error);
     }
 }
 
@@ -226,7 +160,11 @@ function drawScene(x = ballX, y = ballY) {
     // Draw person stick figure
     ctx.strokeStyle = '#000';
     ctx.lineWidth = 2;
+    
+    // Save current context state
     ctx.save();
+    
+    // Position stick figure slightly behind the ball's starting position
     ctx.translate(20, 0);
     
     // Head with baseball cap
@@ -240,7 +178,7 @@ function drawScene(x = ballX, y = ballY) {
     ctx.lineTo(62, canvas.height - 100);
     ctx.stroke();
     
-    // Body
+    // Body - leaning back for serve position
     ctx.beginPath();
     ctx.moveTo(50, canvas.height - 90);
     ctx.lineTo(45, canvas.height - 60);
@@ -270,20 +208,25 @@ function drawScene(x = ballX, y = ballY) {
     ctx.stroke();
     
     // Tennis racquet
+    // Handle
+    ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(30, canvas.height - 90);
     ctx.lineTo(50, canvas.height - 115);
     ctx.stroke();
     
+    // Racquet head
     ctx.beginPath();
     ctx.save();
     ctx.translate(55, canvas.height - 120);
-    ctx.rotate(Math.PI / 4);
+    ctx.rotate(Math.PI / 4); // Rotate 45 degrees
     ctx.ellipse(0, 0, 12, 16, 0, 0, Math.PI * 2);
     ctx.stroke();
     
     // Racquet strings
     ctx.lineWidth = 0.3;
+    
+    // Vertical strings
     for (let i = -10; i <= 10; i += 4) {
         ctx.beginPath();
         ctx.moveTo(i, -14);
@@ -291,6 +234,7 @@ function drawScene(x = ballX, y = ballY) {
         ctx.stroke();
     }
     
+    // Horizontal strings
     for (let i = -12; i <= 12; i += 4) {
         ctx.beginPath();
         ctx.moveTo(-10, i);
@@ -332,9 +276,13 @@ function drawScene(x = ballX, y = ballY) {
         ctx.fillStyle = '#4CAF50';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
+        
+        // Add white outline to text
         ctx.strokeStyle = 'white';
         ctx.lineWidth = 2;
         ctx.strokeText('POINT!', canvas.width/2, canvas.height/2);
+        
+        // Fill text
         ctx.fillText('POINT!', canvas.width/2, canvas.height/2);
         ctx.restore();
     }
@@ -353,15 +301,6 @@ document.getElementById('angle').addEventListener('input', (e) => {
 
 document.getElementById('throwButton').addEventListener('click', startSimulation);
 document.getElementById('resetButton').addEventListener('click', resetSimulation);
-
-// Auth state check
-auth.onAuthStateChanged(user => {
-    if (!user) {
-        window.location.href = 'login.html';
-    } else {
-        updateProgressDisplay();
-    }
-});
 
 // Initialize the simulation
 updateDisplays();

@@ -11,6 +11,34 @@ import {
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
 import { getAnalytics } from "firebase/analytics";
 
+// Error handler function
+const handleAuthError = (error) => {
+    let message = '';
+    switch (error.code) {
+      case 'auth/wrong-password':
+        message = 'Password salah. Silakan coba lagi.';
+        break;
+      case 'auth/user-not-found':
+        message = 'Email tidak terdaftar.';
+        break;
+      case 'auth/email-already-in-use':
+        message = 'Email sudah terdaftar.';
+        break;
+      case 'auth/weak-password':
+        message = 'Password terlalu lemah. Minimal 6 karakter.';
+        break;
+      case 'auth/invalid-email':
+        message = 'Format email tidak valid.';
+        break;
+      case 'auth/network-request-failed':
+        message = 'Koneksi gagal. Periksa internet Anda.';
+        break;
+      default:
+        message = error.message;
+    }
+    throw new Error(message);
+  };
+
 // Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyD4CYi9sjsW79ZiLcerhhOmIFR-Ygd8Ueo",
@@ -48,18 +76,17 @@ const createUserDocument = async (user) => {
     }, { merge: true });
 };
 
-// Login with email/password
+// Modify the existing login function
 export const loginWithEmail = async (email, password) => {
     try {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-        const token = await user.getIdToken();
-        return { user, token };
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      const token = await user.getIdToken();
+      return { user, token };
     } catch (error) {
-        console.error('Login error:', error);
-        throw error;
+      throw handleAuthError(error);
     }
-};
+  };
 
 // Register with email/password
 export const registerWithEmail = async (email, password, displayName) => {
